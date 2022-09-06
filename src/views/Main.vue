@@ -1,13 +1,16 @@
 <template>
-  <div></div>
-  <div>456</div>
+  <el-container>
+    <el-header>Header</el-header>
+    <el-main>Main</el-main>
+  </el-container>
 </template>
 
 <script setup></script>
 
 <style lang="scss" scoped>
-.main {
-  .abc {
+:deep(<inner-selector >) {
+  .el-container {
+    height: 100%;
   }
 }
 </style>
