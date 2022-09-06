@@ -8,9 +8,7 @@
 <script setup></script>
 
 <style lang="scss" scoped>
-:deep(<inner-selector >) {
-  .el-container {
-    height: 100%;
-  }
+:deep(.el-container) {
+  height: 100%;
 }
 </style>
