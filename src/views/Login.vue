@@ -47,7 +47,8 @@ async function loginBoke() {
 .loginbackground {
   width: 100%;
   height: 100%;
-  background-color: aqua;
+  background: url(../../public/bg_menu.png) no-repeat;
+  background-size: 100%;
 }
 .login {
   width: 500px;
