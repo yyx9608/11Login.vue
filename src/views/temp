@@ -1,0 +1,148 @@
+<template>
+  <div class="loginbackground">
+    <div class="login">
+<!--      <img src="../../public/pathogeno.png" alt="My test image">-->
+      <el-form>
+        <el-form-item>
+          <el-input v-model="account"></el-input>
+        </el-form-item>
+        <el-form-item label="">
+          <el-input v-model="password"></el-input>
+        </el-form-item>
+      </el-form>
+      <div>
+<!--        <el-button type="info">注册</el-button>-->
+        <div class="btn">登录</div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script lang="ts" setup>
+import { ref } from '@vue/reactivity';
+import { login } from '../plugin/axios/interface';
+import { ElMessage } from 'element-plus';
+import router from '../router';
+// 用户名
+const account = ref('');
+const password = ref('');
+async function loginBoke() {
+  const { data: res } = await login({
+    account: account.value,
+    password: password.value,
+  });
+  if (res.meta.status === 1) {
+    return ElMessage.error(res.meta.msg);
+  }
+  const data = res.data;
+  data.uname = account.value;
+  sessionStorage.setItem('loginInfo', JSON.stringify(data));
+  router.push({ name: 'main' });
+}
+</script>
+
+<style lang="scss" scoped>
+.loginbackground {
+  width: 100%;
+  height: 100%;
+  background: url(../../public/background.png) no-repeat;
+  background-size: 100%;
+}
+.login {
+  width: 30%;
+  height: 500px;
+  margin: auto;
+  position: fixed;
+  left: 50%;
+  top: 70%;
+  transform: translate(-50%, -50%);
+  color: rgb(63, 61, 61);
+}
+.btn { /*登录按钮*/
+  display: inline-block;
+  text-align: center;
+
+  transform: translate(-50%, -50%);
+  /*display:flex;*/
+  padding: 5px;
+  width:80%; /*长度*/
+  height:150%;
+  margin: auto;
+  margin-top: 1px;/*边框与上面的距离*/
+  margin-left: 190px;
+  margin-right: 210px;
+  background-color:darkred;
+  color: white;
+}
+img {
+
+  width:500px;
+  height:200px;
+
+  padding-bottom: 10px;
+}
+:deep(.el-form) {
+  margin-top: 30px;
+  margin-bottom: 30px;
+  padding: 20px;
+}
+</style>
+
+
+
+
+###############################################
+<template>
+  <el-menu
+      :default-active="activeIndex"
+      class="el-menu-demo"
+      mode="horizontal"
+      @select="handleSelect"
+  >
+    <el-menu-item index="1">广州实验室</el-menu-item>
+    <el-menu-item index="2">北京实验室</el-menu-item>
+    <el-menu-item index="3">良培实验室</el-menu-item>
+    <el-menu-item index="4">康圣达实验室</el-menu-item>
+  </el-menu>
+  <div class="h-6" />
+  <el-menu
+      :default-active="activeIndex2"
+      class="el-menu-demo"
+      mode="horizontal"
+      background-color="#545c64"
+      text-color="#fff"
+      active-text-color="#ffd04b"
+      @select="handleSelect"
+  >
+    <el-menu-item index="1">广州实验室</el-menu-item>
+    <el-sub-menu index="2">
+      <template #title>北京实验室</template>
+      <el-menu-item index="2-1">item one</el-menu-item>
+      <el-menu-item index="2-2">item two</el-menu-item>
+      <el-menu-item index="2-3">item three</el-menu-item>
+      <el-sub-menu index="2-4">
+        <template #title>item four</template>
+        <el-menu-item index="2-4-1">item one</el-menu-item>
+        <el-menu-item index="2-4-2">item two</el-menu-item>
+        <el-menu-item index="2-4-3">item three</el-menu-item>
+      </el-sub-menu>
+    </el-sub-menu>
+    <el-menu-item index="3">良培实验室</el-menu-item>
+    <el-menu-item index="4">康圣达实验室</el-menu-item>
+  </el-menu>
+</template>
+<script lang="ts" setup>
+import { ref } from 'vue'
+
+const activeIndex = ref('1')
+const activeIndex2 = ref('1')
+const handleSelect = (key: string, keyPath: string[]) => {
+  console.log(key, keyPath)
+}
+</script>
+
+<style lang="scss" scoped>
+:deep(.el-container) {
+  height: 100%;
+}
+</style>

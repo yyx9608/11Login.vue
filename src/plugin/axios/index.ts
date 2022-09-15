@@ -1,5 +1,5 @@
 import axios from 'axios';
-axios.defaults.baseURL = 'https://kamy-yfy.xyz:6060';
+axios.defaults.baseURL = 'http://1486641sd0.iask.in:35485';
 
 
 
