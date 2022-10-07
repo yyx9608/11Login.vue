@@ -15,7 +15,7 @@
       <div>
         <el-button type="primery" @click="loginBoke">登陆</el-button>
       </div>
-    </div>
+    </div>npm
   </div>
 </template>
 
