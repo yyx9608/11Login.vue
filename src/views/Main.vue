@@ -4,15 +4,15 @@
       <el-scrollbar>
         <el-menu :default-openeds="['1', '3']">
           <el-autocomplete placeholder="搜索" />
-          <el-button text @click="dialogVisible = true">创建任务</el-button>
+          <el-button :disabled="''" text @click="dialogVisible = true">创建任务</el-button>
           <el-dialog v-model="dialogVisible" title="创建文件夹" width="30%" center="false" :before-close="handleClose">
             <span>文件夹名称</span>
             <el-input v-model="proName" />
             <span>上传样本信息</span>
             <el-input v-model="sampleXlsx" />
-            <el-upload ref="upload" class="upload-demo" action="/upload" :limit="1" :on-exceed="handleExceed"
+            <el-upload ref="upload" class="upload-demo" :action="baseUrl" :limit="1" :on-exceed="handleExceed"
               :auto-upload="false" accept=".xlsx
-              " :submit="">
+              ">
               <template #trigger>
                 <el-button text>添加</el-button>
               </template>
@@ -27,7 +27,7 @@
             </el-upload>
             <span>上传原始数据</span>
             <el-input v-model="input" />
-            <el-upload ref="upload" class="upload-demo"
+            <el-upload ref="upload1" class="upload-demo"
               action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15" :limit="1" :on-exceed="handleExceed"
               :auto-upload="false">
               <template #trigger>
@@ -125,11 +125,13 @@
 <script lang="ts" setup>
 import { ref, reactive, onMounted } from 'vue';
 import axios from '../plugin/axios/interface';
+import axurl from '../plugin/axios'
 import { Menu as IconMenu, Message, Setting } from '@element-plus/icons-vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { ElMessage, ElMessageBox, UploadInstance } from 'element-plus';
 import { ArrowDown } from '@element-plus/icons-vue';
 
 const dialogVisible = ref(false)
+const baseUrl = ref(`${axurl.defaults.baseURL}/upload/`)
 
 interface Lab {
   id: number,
@@ -182,9 +184,6 @@ async function samplelistBK() {
   samp.value = res[0].result;
 }
 
-async function showRun(labId: number) {
-
-}
 
 const handleCommand = (command: string | number | object) => {
   ElMessage(`click on item ${command}`)
@@ -217,7 +216,7 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .example-showcase .el-dropdown-link {
   cursor: pointer;
   color: var(--el-color-primary);
