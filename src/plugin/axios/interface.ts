@@ -22,5 +22,7 @@ function startTask(params: object) {
 function stopTask(params: object) {
   return axios.post('/prj/task/terminate', params)
 }
-
-export default { queryList, login, taskList, createTask, startTask ,stopTask }
+function sampleResult(params: object) {
+  return axios.post('/prj/task/result/queryList', params)
+}
+export default { queryList, login, taskList, createTask, startTask ,stopTask , sampleResult }

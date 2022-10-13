@@ -28,7 +28,7 @@ import router from '../router';
 
 
 // 用户名
-const username = ref('test1');
+const username = ref('chenjianhua');
 const password = ref('123456');
 async function loginBoke() {
   const { data: res } = await login({
