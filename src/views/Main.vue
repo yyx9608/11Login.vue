@@ -13,16 +13,9 @@
     <el-aside width="150px">
       <el-scrollbar>
         <el-menu :default-openeds="['1', '3']">
-          <!--          <el-dropdown-item @command="sampleResult" v-for="item in result" :key="item.name" :command="item.id">{{item.name}}-->
-          <!--          <el-menu-item v-for="item in result" :key="item.id" :index="item.name"@click="selectSample(item)" >{{item.sid}}-->
-          <el-sub-menu index="3">
-            <template #title>
-              <el-icon>
-                <setting />
-              </el-icon>Sampleid
-            </template>
-          </el-sub-menu>
-          <!--          xxxxxxxxxxxxxx-->
+          <el-menu-item v-for="item in result" :key="item.taskId" :index="item.taskId" @click="sampleResult(item)">
+            {{item.sid}}
+          </el-menu-item>
         </el-menu>
       </el-scrollbar>
     </el-aside>
@@ -64,7 +57,7 @@
             <el-table-column prop="createdAt" label="完成时间" width="120" />
             <el-table-column prop="sampleInfoFile" label="样本路径" />
           </el-table>
-          <el-button :disabled="disabledButton" @click="dialogStart = true">启动任务</el-button>
+          <el-button :disabled="disabledButton" @click="missionStart">启动任务</el-button>
           <el-dialog v-model="dialogStart" title="开始分析" width="20%" center="false" :before-close="handleClose">
             <span>输入项目id</span>
             <el-input v-model="proId" />
@@ -72,8 +65,12 @@
               <el-button size="small" @click="startTask">开始分析</el-button>
             </span>
           </el-dialog>
+
           <el-button :disabled="disabledButton" @click="dialogStop = true">中止任务</el-button>
-          <el-button  @click="sampleResult">展示样本</el-button>
+          <el-button @click="sampleResult">展示样本</el-button>
+
+
+          <!--          <el-button v-if="result.id===run.id" @click="sampleResult" @click="dialogStart = true">展示样本</el-button>-->
           <el-dialog v-model="dialogStop" title="中止任务" width="20%" center="false" :before-close="handleClose">
             <span>输入项目id</span>
             <el-input v-model="proId" />
@@ -139,10 +136,12 @@ import axurl from '../plugin/axios';
 import { Menu as IconMenu, Message, MessageBox, Setting } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox, genFileId, UploadInstance, UploadProps, UploadRawFile } from 'element-plus';
 import { ArrowDown } from '@element-plus/icons-vue';
+import { clippingParents } from '@popperjs/core';
 
 
 const dialogVisible = ref(false)
 const dialogStart = ref(false)
+const dialogList = ref(false)
 const dialogStop = ref(false)
 const baseUrl = ref(`${axurl.defaults.baseURL}/upload/`)
 
@@ -189,7 +188,7 @@ interface Result {
 }
 
 const currentPage = ref(1);
-const pageSize = ref(30);
+const pageSize = ref(50);
 const labId = ref(1);
 const taskId = ref('');
 const sid = ref('');
@@ -198,9 +197,10 @@ const id = ref('');
 const name = ref('');
 const proName = ref('20221007');
 const proId = ref('');
+
 const sampleXlsx = ref('20221007.xlsx');
 const dataAddress = ref('/Memory/Rawdata/morgeneby/rawdata/gz/221007_M05001_0547_000000000-GCT53.rar')
-console.log(currentPage)
+
 // 定义lab类型的数组
 let lab = ref([] as Lab[]);
 let run = ref([] as Run[]);
@@ -208,7 +208,7 @@ let samp = ref([] as Samp[]);
 let result = ref([] as Result[]);
 const disabledButton = ref(true)
 
-let checkData: any = ref([])
+let checkData = ref([] as Run[])
 
 async function querylistBK() {
   const res = (await axios.queryList({ currentPage: currentPage.value, pageSize: pageSize.value }))?.data || [];
@@ -226,23 +226,26 @@ async function taskListBK(id: number) {
 
 }
 
-// async function sampleListBK() {
-//   const res = (await axios.sampleList({ currentPage: currentPage.value, pageSize: pageSize.value }))?.data || [];
-//   samp.value = res[0].result;
-// }
-// async function sampleResult() {
-//   const res = (await axios.sampleResult({ currentPage: currentPage.value, pageSize: pageSize.value }))?.data || [];
-//   samp.value = res[0].result;
-// }
-async function sampleResult() {
+
+async function sampleResult(item: any) {
+  // const res = (await axios.sampleResult({ taskId: taskId.value }))?.data || []
   const params = {
     result: {
-      taskId: taskId.value,
+      taskId: checkData.value[0].id,
+
       sid: sid.value
     },
 
   }
   const res = (await axios.sampleResult(params))?.data || []
+  // const res = (await axios.sampleResult({ currentPage: currentPage.value, pageSize: pageSize.value, sid: sid.value,taskId: checkData.value[0].id }))?.data || []
+  result.value = res[0].result // 钱都没放到你自己的钱包里，怎么拿出去花
+  // proId.value = String(checkData.value[0].id);
+  taskId.value=String(checkData.value[0].id);
+  console.log(333);
+  console.log(checkData);
+  console.log(checkData.value[0].id);
+  console.log(taskId.value);
   if (res[0].code === 2001) {
     ElMessage({ message: '创建成功', type: 'success' })
 
@@ -267,8 +270,15 @@ async function createTask() {
 
   }
 }
-console.log(labId.value)
 
+function missionStart() {
+  dialogStart.value = true;
+  console.log(checkData)
+}
+function showSample() {
+  dialogList.value = true;
+  taskId.value = String(checkData.value[0].id);
+}
 
 async function startTask() {
   const res = (await axios.startTask({ id: proId.value }))?.data || []
@@ -288,7 +298,6 @@ async function stopTask() {
 
 function selectTask(obj: Run) {
   checkData.value = run.value.filter((item) => item.id == obj.id)
-  console.log(222); console.log(checkData);
 }
 
 // function selectSample(obj: Result) {
