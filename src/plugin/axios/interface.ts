@@ -22,7 +22,15 @@ function startTask(params: object) {
 function stopTask(params: object) {
   return axios.post('/prj/task/terminate', params)
 }
+
 function sampleResult(params: object) {
   return axios.post('/prj/task/result/queryList', params)
 }
-export default { queryList, login, taskList, createTask, startTask ,stopTask , sampleResult }
+function sampleInfo(params: object) {
+  return axios.post('/prj/sample/queryList', params)
+}
+// function submitPatho(params: object) {
+//   return axios.post( /prj/task/result/verify', params)
+// }
+
+export default { queryList, login, taskList, createTask, startTask ,stopTask , sampleResult ,sampleInfo }
