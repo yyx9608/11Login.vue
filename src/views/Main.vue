@@ -50,8 +50,10 @@
 
       <!--        结果展示-->
       <el-main>
+        <template>
+        </template>
         <el-scrollbar>
-          <el-table v-show="firTableData.length" :data="firTableData">
+          <el-table v-show="firTableData.length" border :data="firTableData" style="width: 80%" >
             <el-table-column prop="name" label="项目名称" width="140" />
             <el-table-column prop="status" label="分析状态" width="120" />
             <el-table-column prop="id" label="id" width="220" />
@@ -71,6 +73,14 @@
 
           <el-button :disabled="disabledButton" @click="dialogStop = true">中止任务</el-button>
           <el-button @click="sampleResult">展示样本</el-button>
+          <el-button @click="sampleInfo">展示信息</el-button>
+          <!-- 你刚刚这么写，不对，这个item什么都不是，你并没有传东西进去 -->
+          <!-- 你现在要做的就是获取你要对比的那条数据
+               怎么获取呢，去找到你点击左侧第一列的那个事件，点一下，就能获取到了
+               现在跟莫老师一起去看看
+               周围都没有v-for出来的item，所以这是一个不存在的东西
+          -->
+          <el-button @click="sampleSheet">展开详情</el-button>
           <!--          <el-button v-if="result.id===run.id" @click="sampleResult" @click="dialogStart = true">展示样本</el-button>-->
           <el-dialog v-model="dialogStop" title="中止任务" width="20%" center="false" :before-close="handleClose">
             <span>输入项目id</span>
@@ -82,11 +92,32 @@
 
           <!--          <el-button  @click="startTask">开始分析</el-button>-->
           <!--          <el-button  @click="startTask">中止分析9</el-button>-->
-<!--          <el-table v-show="secTable.length" :data="secTable" height="100" @selection-change="handleSelectionChange">-->
-          <el-table v-show="secTable.length" :data="secTable" height="100" >
-            <el-table-column type="selection" width="50" />
+          <!--          <el-table v-show="secTable.length" :data="secTable" height="100" @selection-change="handleSelectionChange">-->
+          <el-table v-show="midTable.length" :data="midTable" border style="width: 90%">
+            <el-table-column prop="name" label="患者姓名" width="100" />
+            <el-table-column prop="sex" label="性别" width="60" />
+            <el-table-column prop="sampleId" label="样本编号" width="150" />
+            <el-table-column prop="agent" label="代理商" width="220" />
+            <el-table-column prop="hospital" label="医院" width="180" />
+            <el-table-column prop="office" label="科室" />
+          </el-table>
+          <el-table v-show="midTable.length" :data="midTable" border style="width: 90%">
+            <el-table-column prop="analysisItem" label="检测项目" width="100" />
+            <el-table-column prop="age" label="年龄" width="60" />
+            <el-table-column prop="receiveSampleDate" label="收样日期" width="150" />
+            <el-table-column prop="status" label="审核状态" width="220" />
+            <el-table-column prop="libraryConcentration" label="文库浓度" width="180" />
+            <el-table-column prop="resultFromHospital" label="医院诊断" />
+          </el-table>
 
+
+          <el-table v-show="midTable.length" :data="midTable" style="width: 100%">
+          </el-table>
+
+          <el-table v-show="secTable.length" :data="secTable" height="100">
+            <el-table-column type="selection" width="50" />
             <el-table-column prop="sid" label="样本编号" width="120" />
+            <el-table-column prop="id" label="id" width="120" />
             <el-table-column prop="pathogensClassify" label="病原体分类" width="120" />
             <el-table-column prop="pathogensChsName" label="中文名" width="120" />
             <el-table-column prop="pathogensEngName" label="英文名" width="120" />
@@ -106,6 +137,7 @@
               <!-- <el-dropdown /> -->
             </el-table-column>
           </el-table>
+          <el-button v-show="secTable.length" @click="generateRepo">生成报告</el-button>
         </el-scrollbar>
       </el-main>
     </el-container>
@@ -165,6 +197,7 @@ import { ArrowDown } from '@element-plus/icons-vue';
 import { clippingParents } from '@popperjs/core';
 
 
+
 const dialogVisible = ref(false)
 const dialogStart = ref(false)
 const dialogList = ref(false)
@@ -181,53 +214,28 @@ interface Lab {
   name: string
 }
 interface Run {
-  id: number,
-  createdBy: string,
-  name: string,
-  workDir: string,
-  sampleInfoFile: string,
-  sequenceId: string,
-  lab: number,
-  status: string,
-  step: string,
-  createdAt: string,
-  // pid: null,
-  // processStartAt: null
-  // updatedAt: null,
-  // createdAt: string,
+  id: number, createdBy: string, name: string, workDir: string,
+  sampleInfoFile: string, sequenceId: string, lab: number, satus: string, step: string, createdAt: string,
 }
 interface Samp {
-  taskId: number,
-  remotePath: string,
-  sid: string
+  taskId: number, remotePath: string, sid: string
 }
 interface Result {
-  id: number,
-  taskId: number,
-  sid: string,
-  pathogensClassify: string,
-  pathogensChsName: string,
-  pathogensEngName: string,
-  sampleType: string,
-  pathogensNote: string,
-  agent: string,
-  hospital: string,
-  office: string,
-  name: string,
-  sex: string,
-  age: string,
-  sign: string,
-  readsNums: string,
-  status: string
+  id: number, taskId: number, sid: string, pathogensClassify: string, pathogensChsName: string, pathogensEngName: string, sampleType: string, pathogensNote: string, agent: string, hospital: string, office: string, name: string, sex: string, age: string, sign: string, readsNums: string, status: string
+}
+interface Samplesheet {
+  id: number; lab: string; name: string; agent: string; hospital: string; office: string; doctor: string; sampleId: string; sex: string; analysisItem: string; sampleType: string; nucleicAcidConcentration: string; libraryConcentration: string; receiveSampleDate: string; paymentStatus: string; sickbedNum: string; medicalRecordNum: string; age: string; phoneNum: string; identityCardNum: string;
 }
 
 const currentPage = ref(1);
 const pageSize = ref(100);
 const labId = ref(1);
 const taskId = ref('');
+const task = ref('');
+const sampleId = ref('');
 const sid = ref('');
-const sampleInfoFile = ref('');
 const id = ref('');
+const sampleInfoFile = ref('');
 const name = ref('');
 const proName = ref('20221007');
 const proId = ref('');
@@ -238,16 +246,24 @@ const dataAddress = ref('/Memory/Rawdata/morgeneby/rawdata/gz/221007_M05001_0547
 // 定义lab类型的数组
 let lab = ref([] as Lab[]);
 let run = ref([] as Run[]);
+// let samplepsheet = ref([] as Samplesheet[]);
 
 // let samp = ref([] as Samp[]);
 // 第二列菜单的数据
 let secMenu = ref([] as Result[]);
+// 第二列菜单点击的那条数据
+let secClickMenu: any = ref([]);
 const disabledButton = ref(true)
 
 // 右边第一个列表的数据
 let firTableData = ref([] as Run[]);
 // 右边第二个列表的数据
 let secTable = ref([] as Result[]);
+let midTable = ref([] as Samplesheet[]);
+let infoTable = ref([] as Samplesheet[]);
+// let midTable = infoTable.filter((item) => {
+//   return item.name == midTable.name
+// });
 
 onMounted(() => {
   querylistBK()
@@ -282,18 +298,41 @@ async function sampleResult(item: any) {
   }
   const res = (await axios.sampleResult(params))?.data || []
   secMenu.value = res[0].result // 钱都没放到你自己的钱包里，怎么拿出去花
-
-  // proId.value = String(firTableData.value[0].id);
   taskId.value = String(firTableData.value[0].id); //先把各种值print出来 看看哪个是我要的 然后赋值给那个不听话的变量TnT
   console.log(333);
   console.log(firTableData);
+  console.log(secMenu.value);
   console.log(firTableData.value[0].id);
   console.log(taskId.value);
+  console.log();
   if (res[0].code === 2001) {
     ElMessage({ message: '创建成功', type: 'success' })
 
   }
 }// 这个位置少了括号，删代码的时候多注意，不要删多了
+
+//样本信息
+async function sampleInfo(item: any) {
+  const params = {
+    info: {
+      task: secTable.value[0].taskId,
+      sampleId: secTable.value[0].sid,
+      // task :task.value,
+    },
+    "pageSize": 100,
+    "currentPage": 1
+  }
+  const res = (await axios.sampleInfo(params))?.data || []
+  // secTable.value = secMenu.value.filter((item) => item.id == obj.id)
+  infoTable.value = res[0].result // 钱都没放到你自己的钱包里，怎么拿出去花
+  task.value = String(secTable.value[0].taskId);
+  name.value = String(secTable.value[0].name);
+  sampleId.value = String(secTable.value[0].sid);
+  console.log(444);
+  console.log(infoTable.value);
+  console.log(secTable.value[0].name)
+  console.log(secTable.value)
+}
 async function createTask() {
   const params = {
     task: {
@@ -313,6 +352,16 @@ async function createTask() {
     ElMessage({ message: '创建成功', type: 'success' })
 
   }
+}
+
+async function generateRepo() {
+  const params = {
+      id: id.value
+      // secTable.value[0].id,
+  }
+  id.value = String(secTable.value[0].id)
+  const res = (await axios.generateRepo(params))?.data || []
+
 }
 
 function missionStart() {
@@ -347,12 +396,30 @@ function menuClick(obj: Run) {
   firTableData.value = run.value.filter((item) => item.id == obj.id)
   secTable.value = []
   secMenu.value = []
+  infoTable.value = []
 }
 
+// 这个obj就是你点击传进来的item，名字不一样，但是是一个东西
+// 有空去搜一下：方法的形参和实参
+// 打电话吧，敲累了
+// 那晚上打？现在不是很方便T T
 function selectSample(obj: Result) {
+  // 将点击的数据存secClickMenu里备用
+  secClickMenu.value = obj
   secTable.value = secMenu.value.filter((item) => item.id == obj.id)
-  console.log(222); console.log(secTable.value);
+  console.log(222); console.log(secClickMenu.value);
+  midTable.value = []
 }
+
+function sampleSheet() {
+  midTable.value = infoTable.value.filter((item) => {
+    return item.name == secClickMenu.value.name
+  })
+
+  console.log(555);
+  console.log(midTable.value);
+}
+
 
 const handleCommand = (command: string | number | object) => {
   ElMessage(`click on item ${command}`)

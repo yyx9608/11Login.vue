@@ -29,8 +29,8 @@ function sampleResult(params: object) {
 function sampleInfo(params: object) {
   return axios.post('/prj/sample/queryList', params)
 }
-// function submitPatho(params: object) {
-//   return axios.post( /prj/task/result/verify', params)
-// }
+function generateRepo(params: object) {
+  return axios.post( '/prj/task/result/report', params)
+}
 
-export default { queryList, login, taskList, createTask, startTask ,stopTask , sampleResult ,sampleInfo }
+export default { queryList, login, taskList, createTask, startTask ,stopTask , sampleResult ,sampleInfo ,generateRepo }
