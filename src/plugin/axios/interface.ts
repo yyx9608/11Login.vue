@@ -33,4 +33,10 @@ function generateRepo(params: object) {
   return axios.post( '/prj/task/result/report', params)
 }
 
-export default { queryList, login, taskList, createTask, startTask ,stopTask , sampleResult ,sampleInfo ,generateRepo }
+function sampleVerify(params: object) {
+  return axios.post( '/prj/sample/verify', params)
+}
+function resultVerify(params: object) {
+  return axios.post( '/prj/task/result/verify', params)
+}
+export default { queryList, login, taskList, createTask, startTask ,stopTask , sampleResult ,sampleInfo ,generateRepo ,sampleVerify ,resultVerify}
