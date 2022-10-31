@@ -13,9 +13,10 @@
     </el-aside>
     <el-aside width="220px">
       <el-scrollbar>
-        <el-menu :default-openeds="['1', '3']">
-          <el-menu-item v-for="item in secMenu" :key="item.taskId" :index="item.taskId" @click="selectSample(item)">
+        <el-menu :default-openeds="['1', '3']" v-model="value1">
+          <el-menu-item v-for="item in secMenu" :key="item.sid" :index="item.name" @click="selectSample(item)">
             {{item.sid}}{{item.name}}
+<!--            <el-checkbox :key="item.taskId" v-model="item.check" >{{item.sid}}{{item.name}}</el-checkbox>-->
           </el-menu-item>
         </el-menu>
       </el-scrollbar>
@@ -250,7 +251,7 @@ const proId = ref('');
 
 const sampleXlsx = ref('');
 const dataAddress = ref('file:///Memory/Rawdata/morgeneby/rawdata/gz/221007_M05001_0547_000000000-GCT53.rar')
-
+const checkSample = ref('');
 // 定义lab类型的数组
 let lab = ref([] as Lab[]);
 let run = ref([] as Run[]);
@@ -261,6 +262,7 @@ let run = ref([] as Run[]);
 let secMenu = ref([] as Result[]);
 // 第二列菜单点击的那条数据
 let secClickMenu: any = ref([]);
+let secMenuClick = ref([] as Result[]);
 const disabledButton = ref(true)
 
 // 右边第一个列表的数据
@@ -306,6 +308,9 @@ async function sampleResult(item: any) {
   }
   const res = (await axios.sampleResult(params))?.data || []
   secMenu.value = res[0].result // 钱都没放到你自己的钱包里，怎么拿出去花
+  secMenuClick.value = res[0].result.sort((a: any, b: any) => {
+    return a.agent.localeCompare(b.agent)
+  });
   taskId.value = String(firTableData.value[0].id); //先把各种值print出来 看看哪个是我要的 然后赋值给那个不听话的变量TnT
   console.log(333);
   console.log(firTableData);
@@ -381,11 +386,12 @@ async function resultVerify() {
 
 async function generateRepo() {
   const params: number[] = [];
-  id.value = String(secTable.value[0].id);
-  params.push(Number(secTable.value[0].id));
+  id.value = String(midTable.value[0].id);
+  params.push(midTable.value[0].id);
   // secTable.value.forEach(item=>{
   //   params.push(item.id);
   // })
+  console.log(midTable.value[0].id)
   const res = (await axios.generateRepo(params))?.data || []
 }
 
@@ -434,13 +440,11 @@ function menuClick(obj: Run) {
 function selectSample(obj: Result) {
   // 将点击的数据存secClickMenu里备用
   secClickMenu.value = obj
-  secTable.value = secMenu.value.filter((item) => item.id == obj.id).sort((a, b) => {
-    if (a.agent > b.agent) {
-      return -1
-    } return 1
-  });
-  console.log(222); console.log(secClickMenu.value);
-  midTable.value = []
+  secTable.value = secMenu.value.filter((item) => item.id == obj.id)
+  console.log(666);
+  console.log(secMenu.value);
+  console.log(secTable.value);
+  // midTable.value = []
 }
 
 function sampleSheet() {
