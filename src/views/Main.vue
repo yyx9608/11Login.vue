@@ -13,10 +13,12 @@
     </el-aside>
     <el-aside width="220px">
       <el-scrollbar>
-        <el-menu :default-openeds="['1', '3']" v-model="value1">
-          <el-menu-item v-for="item in secMenu" :key="item.sid" :index="item.name" @click="selectSample(item)">
-            {{item.sid}}{{item.name}}
-<!--            <el-checkbox :key="item.taskId" v-model="item.check" >{{item.sid}}{{item.name}}</el-checkbox>-->
+        <el-menu :default-openeds="['1', '3']" v-model="value">
+          <el-menu-item v-for="item in infoTable" :key="item.sampleId" :index="item.sampleId" @click="sampleSheet(item)">
+<!--          <el-menu-item v-for="item in secMenu" :key="item.sid" :index="item.name" @click="selectSample(item)">-->
+<!--            {{item.sampleId}}{{item.name}}-->
+<!--            <el-checkbox :key="item.taskId" v-model="item.check" >{{item.sampleId}}{{item.name}}</el-checkbox>-->
+            <el-checkbox>{{item.sampleId}}{{item.name}}</el-checkbox>
           </el-menu-item>
         </el-menu>
       </el-scrollbar>
@@ -26,22 +28,22 @@
       <el-header style="text-align: right; font-size: 12px">
         <div class="toolbar">
           <!-- <el-button @click="querylistBK">获取实验室</el-button> -->
-          <el-dropdown trigger="click" @command="taskListBK">
-            <span class="el-dropdown-link">
-              选择实验室<el-icon class="el-icon--right">
-                <arrow-down />
-              </el-icon>
-            </span>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item @command="taskListBK" v-for="item in lab" :key="item.id" :command="item.id">
-                  {{item.name}}
-                  <!--                实验室列表获取  -->
-                </el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-          <el-select v-model="value" clearable placeholder="实验室1">
+<!--          <el-dropdown trigger="click" @command="taskListBK">-->
+<!--            <span class="el-dropdown-link">-->
+<!--              选择实验室<el-icon class="el-icon&#45;&#45;right">-->
+<!--                <arrow-down />-->
+<!--              </el-icon>-->
+<!--            </span>-->
+<!--            <template #dropdown>-->
+<!--              <el-dropdown-menu>-->
+<!--                <el-dropdown-item @command="taskListBK" v-for="item in lab" :key="item.id" :command="item.id">-->
+<!--                  {{item.name}}-->
+<!--                  &lt;!&ndash;                实验室列表获取  &ndash;&gt;-->
+<!--                </el-dropdown-item>-->
+<!--              </el-dropdown-menu>-->
+<!--            </template>-->
+<!--          </el-dropdown>-->
+          <el-select v-model="value" clearable placeholder="选择实验室">
             <el-option v-for="item in lab" :key="item.id" :label="item.name" :id="item.id"
               @click="taskListBK(item.id)" />
           </el-select>
@@ -59,12 +61,13 @@
             <el-table-column prop="status" label="分析状态" width="120" />
             <el-table-column prop="id" label="id" width="220" />
             <el-table-column prop="createdAt" label="完成时间" width="120" />
+            <el-table-column prop="sequenceId" label="数据路径" width="220" />
             <el-table-column prop="sampleInfoFile" label="样本路径" />
           </el-table><br />
 
           <el-button :disabled="disabledButton" @click="missionStart">启动任务</el-button>
           <!--          <el-button  @click="startTask">启动任务</el-button>-->
-          <el-dialog v-model="dialogStart" title="开始分析" width="20%" center="false" :before-close="handleClose">
+          <el-dialog v-model="dialogStart" title="开始分析" width="20%"  >
             <span>输入项目id</span>
             <el-input v-model="proId" />
             <span class="dialog-footer">
@@ -73,17 +76,18 @@
           </el-dialog>
 
           <el-button :disabled="disabledButton" @click="dialogStop = true">中止任务</el-button>
-          <el-button @click="sampleResult">展示样本</el-button>
-          <el-button @click="sampleInfo">展示信息</el-button>
+<!--          <el-button @click="sampleResult">展示样本</el-button>-->
+          <el-button @click="sampleInfo">展示样本</el-button>
+          <el-button @click="sampleResult">获取结果</el-button>
           <!-- 你刚刚这么写，不对，这个item什么都不是，你并没有传东西进去 -->
           <!-- 你现在要做的就是获取你要对比的那条数据
                怎么获取呢，去找到你点击左侧第一列的那个事件，点一下，就能获取到了
                现在跟莫老师一起去看看
                周围都没有v-for出来的item，所以这是一个不存在的东西
           -->
-          <el-button @click="sampleSheet">展开详情</el-button><br /><br />
+          <el-button @click="selectSample">展开结果</el-button><br /><br />
           <!--          <el-button v-if="result.id===run.id" @click="sampleResult" @click="dialogStart = true">展示样本</el-button>-->
-          <el-dialog v-model="dialogStop" title="中止任务" width="20%" center="false" :before-close="handleClose">
+          <el-dialog v-model="dialogStop" title="中止任务" width="20%" >
             <span>输入项目id</span>
             <el-input v-model="proId" />
             <span class="dialog-footer">
@@ -122,7 +126,7 @@
             <el-table-column prop="libraryConcentration" label="文库浓度" width="180" />
             <el-table-column prop="resultFromHospital" label="医院诊断" />
           </el-table><br />
-          <el-table v-show="secTable.length" :data="secTable" border height="100">
+          <el-table v-show="secTable.length" :data="secTable" border height="200">
             <el-table-column type="selection" width="50" />
             <el-table-column prop="sid" label="样本编号" width="120" />
             <el-table-column prop="id" label="id" width="120" />
@@ -151,7 +155,7 @@
     </el-container>
   </el-container>
 
-  <el-dialog v-model="dialogVisible" title="创建文件夹" width="30%" center="false" :before-close="handleClose">
+  <el-dialog v-model="dialogVisible" title="创建文件夹" width="30%" >
     <span>文件夹名称</span>
     <el-input v-model="proName" />
     <span>上传样本信息</span>
@@ -196,19 +200,19 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import axios from '../plugin/axios/interface';
 import axurl from '../plugin/axios';
-import { Menu as IconMenu, Message, MessageBox, Setting } from '@element-plus/icons-vue';
-import { ElMessage, ElMessageBox, genFileId, UploadInstance, UploadProps, UploadRawFile, ElTable } from 'element-plus';
-import { ArrowDown } from '@element-plus/icons-vue';
-import { clippingParents } from '@popperjs/core';
+// import { Menu as IconMenu, Message, MessageBox, Setting } from '@element-plus/icons-vue';
+import { ElMessage, genFileId, UploadInstance, UploadProps, UploadRawFile } from 'element-plus';
+// import { ArrowDown } from '@element-plus/icons-vue';
+// import { clippingParents } from '@popperjs/core';
 
 
 
 const dialogVisible = ref(false)
 const dialogStart = ref(false)
-const dialogList = ref(false)
+// const dialogList = ref(false)
 const dialogStop = ref(false)
 const baseUrl = ref(`${axurl.defaults.baseURL}/upload/`)
 
@@ -225,9 +229,9 @@ interface Run {
   id: number, createdBy: string, name: string, workDir: string,
   sampleInfoFile: string, sequenceId: string, lab: number, status: string, step: string, createdAt: string,
 }
-interface Samp {
-  taskId: number, remotePath: string, sid: string
-}
+// interface Samp {
+//   taskId: number, remotePath: string, sid: string
+// }
 interface Result {
   id: number, taskId: number, sid: string, pathogensClassify: string, pathogensChsName: string, pathogensEngName: string, sampleType: string, pathogensNote: string, agent: string, hospital: string, office: string, name: string, sex: string, age: string, sign: string, readsNums: string, status: string
 }
@@ -240,18 +244,18 @@ const pageSize = ref(100);
 const labId = ref(1);
 const taskId = ref('');
 const task = ref('');
-const sampleId = ref('');
+// const sampleId = ref('');
 const sid = ref('');
 const id = ref('');
-const sampleInfoFile = ref('');
-const name = ref('');
+// const sampleInfoFile = ref('');
+// const name = ref('');
 const proName = ref('20221007');
 const proId = ref('');
 // const status = ref('');
 
 const sampleXlsx = ref('');
-const dataAddress = ref('file:///Memory/Rawdata/morgeneby/rawdata/gz/221007_M05001_0547_000000000-GCT53.rar')
-const checkSample = ref('');
+const dataAddress = ref('file://')
+// const checkSample = ref('');
 // 定义lab类型的数组
 let lab = ref([] as Lab[]);
 let run = ref([] as Run[]);
@@ -263,6 +267,7 @@ let secMenu = ref([] as Result[]);
 // 第二列菜单点击的那条数据
 let secClickMenu: any = ref([]);
 let secMenuClick = ref([] as Result[]);
+let resultTable: any = ref([]);
 const disabledButton = ref(true)
 
 // 右边第一个列表的数据
@@ -295,9 +300,8 @@ async function taskListBK(id: number) {
 
 }
 
-
-async function sampleResult(item: any) {
-  // const res = (await axios.sampleResult({ taskId: taskId.value }))?.data || []
+// async function sampleResult(item: any) {
+async function sampleResult() {
   const params = {
     result: {
       taskId: firTableData.value[0].id,
@@ -308,13 +312,14 @@ async function sampleResult(item: any) {
   }
   const res = (await axios.sampleResult(params))?.data || []
   secMenu.value = res[0].result // 钱都没放到你自己的钱包里，怎么拿出去花
+  resultTable = res[0].result
   secMenuClick.value = res[0].result.sort((a: any, b: any) => {
     return a.agent.localeCompare(b.agent)
   });
   taskId.value = String(firTableData.value[0].id); //先把各种值print出来 看看哪个是我要的 然后赋值给那个不听话的变量TnT
   console.log(333);
-  console.log(firTableData);
-  console.log(secMenu.value);
+  // console.log(firTableData);
+  console.log(secMenuClick.value);
   console.log(firTableData.value[0].id);
   console.log(taskId.value);
   console.log();
@@ -325,11 +330,35 @@ async function sampleResult(item: any) {
 }// 这个位置少了括号，删代码的时候多注意，不要删多了
 
 //样本信息
-async function sampleInfo(item: any) {
+// async function sampleInfo(item: any) {
+//   const params = {
+//     info: {
+//       // task: firTableData.value[0].id,
+//       task: secTable.value[0].taskId,
+//       sampleId: secTable.value[0].sid,
+//       // task :task.value,
+//     },
+//     "pageSize": 100,
+//     "currentPage": 1
+//   }
+//   const res = (await axios.sampleInfo(params))?.data || []
+//   // secTable.value = secMenu.value.filter((item) => item.id == obj.id)
+//   infoTable.value = res[0].result // 钱都没放到你自己的钱包里，怎么拿出去花
+//   task.value = String(secTable.value[0].taskId);
+//   name.value = String(secTable.value[0].name);
+//   sampleId.value = String(secTable.value[0].sid);
+//   console.log(444);
+//   console.log(infoTable.value);
+//   console.log(secTable.value[0].name)
+//   console.log(secTable.value)
+// }
+// async function sampleInfo(item: any) {
+async function sampleInfo() {
   const params = {
     info: {
-      task: secTable.value[0].taskId,
-      sampleId: secTable.value[0].sid,
+      task: firTableData.value[0].id,
+      // task: secTable.value[0].taskId,
+      // sampleId: secTable.value[0].sid,
       // task :task.value,
     },
     "pageSize": 100,
@@ -338,13 +367,14 @@ async function sampleInfo(item: any) {
   const res = (await axios.sampleInfo(params))?.data || []
   // secTable.value = secMenu.value.filter((item) => item.id == obj.id)
   infoTable.value = res[0].result // 钱都没放到你自己的钱包里，怎么拿出去花
-  task.value = String(secTable.value[0].taskId);
-  name.value = String(secTable.value[0].name);
-  sampleId.value = String(secTable.value[0].sid);
+  secMenuClick.value = res[0].result.sort((a: any, b: any) => {
+    return a.agent.localeCompare(b.agent)
+  });
+  task.value = String(firTableData.value[0].id);
   console.log(444);
   console.log(infoTable.value);
-  console.log(secTable.value[0].name)
-  console.log(secTable.value)
+  // console.log(secTable.value[0].name)
+  // console.log(secTable.value)
 }
 async function createTask() {
   const params = {
@@ -402,10 +432,10 @@ function missionStart() {
   console.log(firTableData);
   proId.value = String(firTableData.value[0].id)
 }
-function showSample() {
-  dialogList.value = true;
-  taskId.value = String(firTableData.value[0].id);
-}
+// function showSample() {
+//   dialogList.value = true;
+//   taskId.value = String(firTableData.value[0].id);
+// }
 
 async function startTask() {
   const res = (await axios.startTask({ id: proId.value }))?.data || []
@@ -427,7 +457,7 @@ async function stopTask() {
 // 第一列菜单点击事件
 function menuClick(obj: Run) {
   firTableData.value = run.value.filter((item) => item.id == obj.id)
-  secTable.value = []
+  // secTable.value = []
   secMenu.value = []
   infoTable.value = []
   midTable.value = []
@@ -437,29 +467,44 @@ function menuClick(obj: Run) {
 // 有空去搜一下：方法的形参和实参
 // 打电话吧，敲累了
 // 那晚上打？现在不是很方便T T
+// 第2列菜单点击事件
 function selectSample(obj: Result) {
   // 将点击的数据存secClickMenu里备用
-  secClickMenu.value = obj
-  secTable.value = secMenu.value.filter((item) => item.id == obj.id)
+  resultTable.value = obj
+  secTable.value = secMenu.value.filter((item) => {
+    return item.sid == secClickMenu.value.sampleId
+  })
   console.log(666);
   console.log(secMenu.value);
   console.log(secTable.value);
-  // midTable.value = []
+  console.log(resultTable.value);
+  secMenu.value = []
+  // secTable.value =[]
 }
-
-function sampleSheet() {
+// function sampleSheet() {
+//   midTable.value = infoTable.value.filter((item) => {
+//     return item.name == secClickMenu.value.name
+//   })
+// }
+function sampleSheet(obj:Samplesheet) {
+  secClickMenu.value = obj
   midTable.value = infoTable.value.filter((item) => {
     return item.name == secClickMenu.value.name
   })
 
   console.log(555);
+  console.log(infoTable.value);
   console.log(midTable.value);
+  console.log(secClickMenu.value);
+  console.log(secMenuClick.value)
+  // console.log(midTable.value);
+  secTable.value =[]
 }
 
-
-const handleCommand = (command: string | number | object) => {
-  ElMessage(`click on item ${command}`)
-}
+//
+// const handleCommand = (command: string | number | object) => {
+//   ElMessage(`click on item ${command}`)
+// }
 const value = ref('')
 
 // const item = {
@@ -467,7 +512,7 @@ const value = ref('')
 //   name: 'Tom',
 //   address: 'No. 189, Grove St, Los Angeles',
 // }
-const tableData = ref(Array.from({ length: 20 }).fill(run))
+// const tableData = ref(Array.from({ length: 20 }).fill(run))
 
 const upload = ref<UploadInstance>()
 
