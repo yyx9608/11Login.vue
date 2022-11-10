@@ -78,14 +78,14 @@
           <el-button :disabled="disabledButton" @click="dialogStop = true">中止任务</el-button>
 <!--          <el-button @click="sampleResult">展示样本</el-button>-->
           <el-button @click="sampleInfo">展示样本</el-button>
-          <el-button @click="sampleResult">获取结果</el-button>
+<!--          <el-button @click="sampleResult">获取结果</el-button>-->
           <!-- 你刚刚这么写，不对，这个item什么都不是，你并没有传东西进去 -->
           <!-- 你现在要做的就是获取你要对比的那条数据
                怎么获取呢，去找到你点击左侧第一列的那个事件，点一下，就能获取到了
                现在跟莫老师一起去看看
                周围都没有v-for出来的item，所以这是一个不存在的东西
           -->
-          <el-button @click="selectSample">展开结果</el-button><br /><br />
+<!--          <el-button @click="selectSample">展开结果</el-button><br /><br />-->
           <!--          <el-button v-if="result.id===run.id" @click="sampleResult" @click="dialogStart = true">展示样本</el-button>-->
           <el-dialog v-model="dialogStop" title="中止任务" width="20%" >
             <span>输入项目id</span>
@@ -135,6 +135,7 @@
             <el-table-column prop="pathogensEngName" label="英文名" width="120" />
             <el-table-column prop="readsNums" label="reads数" width="120" />
             <el-table-column prop="sign" label="信号强度" width="120" />
+            <el-table-column prop="copyMums" label="病原体浓度" width="120" />
             <el-table-column prop="status" label="初始状态" width="120" />
             <el-table-column prop="status" label="审核状态" width="120" />
             <el-table-column prop="status" label="病原结果归属">
@@ -179,17 +180,17 @@
     <el-input v-model="dataAddress" />
     <el-upload ref="upload1" class="upload-demo" action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15"
       :limit="1" :on-exceed="handleExceed" :auto-upload="false">
-      <template #trigger>
-        <el-button text>添加</el-button>
-      </template>
-      <el-button class="ml-3" type="success" @click="submitUpload">
-        上传
-      </el-button>
-      <template #tip>
-        <div class="el-upload__tip text-red">
-          limit 1 file, new file will cover the old file
-        </div>
-      </template>
+<!--      <template #trigger>-->
+<!--        <el-button text>添加</el-button>-->
+<!--      </template>-->
+<!--      <el-button class="ml-3" type="success">-->
+<!--        上传-->
+<!--      </el-button>-->
+<!--      <template #tip>-->
+<!--        <div class="el-upload__tip text-red">-->
+<!--          limit 1 file, new file will cover the old file-->
+<!--        </div>-->
+<!--      </template>-->
     </el-upload>
     <template #footer>
       <span class="dialog-footer">
@@ -233,7 +234,7 @@ interface Run {
 //   taskId: number, remotePath: string, sid: string
 // }
 interface Result {
-  id: number, taskId: number, sid: string, pathogensClassify: string, pathogensChsName: string, pathogensEngName: string, sampleType: string, pathogensNote: string, agent: string, hospital: string, office: string, name: string, sex: string, age: string, sign: string, readsNums: string, status: string
+  id: number, taskId: number,copyMums:string, sid: string, pathogensClassify: string, pathogensChsName: string, pathogensEngName: string, sampleType: string, pathogensNote: string, agent: string, hospital: string, office: string, name: string, sex: string, age: string, sign: string, readsNums: string, status: string
 }
 interface Samplesheet {
   id: number; lab: string; name: string; status: string; agent: string; hospital: string; office: string; doctor: string; sampleId: string; sex: string; analysisItem: string; sampleType: string; nucleicAcidConcentration: string; libraryConcentration: string; receiveSampleDate: string; paymentStatus: string; sickbedNum: string; medicalRecordNum: string; age: string; phoneNum: string; identityCardNum: string;
@@ -266,6 +267,7 @@ let run = ref([] as Run[]);
 let secMenu = ref([] as Result[]);
 // 第二列菜单点击的那条数据
 let secClickMenu: any = ref([]);
+// let xlsxPath: any = ref([]);
 let secMenuClick = ref([] as Result[]);
 let resultTable: any = ref([]);
 const disabledButton = ref(true)
@@ -293,7 +295,6 @@ async function taskListBK(id: number) {
   disabledButton.value = false
   const res = (await axios.taskList({ currentPage: currentPage.value, pageSize: pageSize.value, labId: id }))?.data || [];
   run.value = res[0].result;
-  console.log(111); console.log(run);
   // js中，一串数字超过16位，就会失真，就是所谓的失去精度
   // 解决办法就是叫你的后端把这个id字段转成字符串再传回来给你
   // 前端没办法再处理
@@ -317,12 +318,6 @@ async function sampleResult() {
     return a.agent.localeCompare(b.agent)
   });
   taskId.value = String(firTableData.value[0].id); //先把各种值print出来 看看哪个是我要的 然后赋值给那个不听话的变量TnT
-  console.log(333);
-  // console.log(firTableData);
-  console.log(secMenuClick.value);
-  console.log(firTableData.value[0].id);
-  console.log(taskId.value);
-  console.log();
   if (res[0].code === 2001) {
     ElMessage({ message: '创建成功', type: 'success' })
 
@@ -371,8 +366,6 @@ async function sampleInfo() {
     return a.agent.localeCompare(b.agent)
   });
   task.value = String(firTableData.value[0].id);
-  console.log(444);
-  console.log(infoTable.value);
   // console.log(secTable.value[0].name)
   // console.log(secTable.value)
 }
@@ -432,10 +425,6 @@ function missionStart() {
   console.log(firTableData);
   proId.value = String(firTableData.value[0].id)
 }
-// function showSample() {
-//   dialogList.value = true;
-//   taskId.value = String(firTableData.value[0].id);
-// }
 
 async function startTask() {
   const res = (await axios.startTask({ id: proId.value }))?.data || []
@@ -468,16 +457,11 @@ function menuClick(obj: Run) {
 // 打电话吧，敲累了
 // 那晚上打？现在不是很方便T T
 // 第2列菜单点击事件
-function selectSample(obj: Result) {
+function selectSample() {
   // 将点击的数据存secClickMenu里备用
-  resultTable.value = obj
   secTable.value = secMenu.value.filter((item) => {
     return item.sid == secClickMenu.value.sampleId
   })
-  console.log(666);
-  console.log(secMenu.value);
-  console.log(secTable.value);
-  console.log(resultTable.value);
   secMenu.value = []
   // secTable.value =[]
 }
@@ -486,7 +470,7 @@ function selectSample(obj: Result) {
 //     return item.name == secClickMenu.value.name
 //   })
 // }
-function sampleSheet(obj:Samplesheet) {
+async function sampleSheet(obj:Samplesheet) {
   secClickMenu.value = obj
   midTable.value = infoTable.value.filter((item) => {
     return item.name == secClickMenu.value.name
@@ -499,6 +483,8 @@ function sampleSheet(obj:Samplesheet) {
   console.log(secMenuClick.value)
   // console.log(midTable.value);
   secTable.value =[]
+  await  sampleResult()
+  selectSample()
 }
 
 //
@@ -507,12 +493,6 @@ function sampleSheet(obj:Samplesheet) {
 // }
 const value = ref('')
 
-// const item = {
-//   date: '2016-05-02',
-//   name: 'Tom',
-//   address: 'No. 189, Grove St, Los Angeles',
-// }
-// const tableData = ref(Array.from({ length: 20 }).fill(run))
 
 const upload = ref<UploadInstance>()
 
@@ -523,8 +503,22 @@ const handleExceed: UploadProps['onExceed'] = (files) => {
   upload.value!.handleStart(file)
 }
 
-const submitUpload = () => {
+
+// const submitUpload = () => {
+//   upload.value!.submit()
+// }
+
+async function submitUpload(){
   upload.value!.submit()
+  const params={}
+
+  const res = (await axios.submitUpload(params))?.data||[]
+  if (res[0].code === 2001) {
+    ElMessage({ message: '创建成功', type: 'success' })
+  }
+  console.log(999)
+  console.log(res[0].result)
+
 }
 
 </script>

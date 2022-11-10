@@ -1,5 +1,6 @@
 import exp from 'constants';
 import axios from './index';
+import {url} from "inspector";
 
 
 // 
@@ -39,4 +40,7 @@ function sampleVerify(params: object) {
 function resultVerify(params: object) {
   return axios.post( '/prj/task/result/verify', params)
 }
-export default { queryList, login, taskList, createTask, startTask ,stopTask , sampleResult ,sampleInfo ,generateRepo ,sampleVerify ,resultVerify}
+function submitUpload(params: object){
+  return axios.post( 'http://1486641sd0.iask.in:35485/upload/', params)
+}
+export default { queryList, login, taskList, createTask, startTask ,stopTask , sampleResult ,sampleInfo ,generateRepo ,sampleVerify ,resultVerify ,submitUpload}
