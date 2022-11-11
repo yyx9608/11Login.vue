@@ -40,7 +40,21 @@ function sampleVerify(params: object) {
 function resultVerify(params: object) {
   return axios.post( '/prj/task/result/verify', params)
 }
+// 上传样本信息
 function submitUpload(params: object){
   return axios.post( 'http://1486641sd0.iask.in:35485/upload/', params)
 }
-export default { queryList, login, taskList, createTask, startTask ,stopTask , sampleResult ,sampleInfo ,generateRepo ,sampleVerify ,resultVerify ,submitUpload}
+// 搜索结果
+function resultSearch(params: object){
+  return axios.post( '/prj/task/result/search', params)
+}
+function sampleSearch(params: object) {
+  return axios.post('/prj/sample/search', params)
+}
+function taskSearch(params: object) {
+  return axios.post('/prj/task/search', params)
+}
+function pathogenQuery(params: object) {
+  return axios.post('/prj/task/pathogen/query', params)
+}
+export default { queryList, login, taskList, createTask, startTask ,stopTask , sampleResult ,sampleInfo ,generateRepo ,sampleVerify ,resultVerify ,submitUpload,resultSearch,sampleSearch,taskSearch,pathogenQuery}

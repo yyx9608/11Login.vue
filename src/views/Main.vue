@@ -3,7 +3,7 @@
     <el-aside width="150px">
       <el-scrollbar>
         <el-menu :default-openeds="['1', '3']">
-          <el-autocomplete placeholder="搜索" />
+          <el-autocomplete placeholder="搜索" :fetch-suggestions="resultSearch" v-model="search"/>
           <el-button :disabled="disabledButton" text @click="dialogVisible = true">创建任务</el-button>
           <el-menu-item v-for="item in run" :key="item.id" :index="item.id" @click="menuClick(item)">
             {{item.name}}
@@ -14,10 +14,7 @@
     <el-aside width="220px">
       <el-scrollbar>
         <el-menu :default-openeds="['1', '3']" v-model="value">
-          <el-menu-item v-for="item in infoTable" :key="item.sampleId" :index="item.sampleId" @click="sampleSheet(item)">
-<!--          <el-menu-item v-for="item in secMenu" :key="item.sid" :index="item.name" @click="selectSample(item)">-->
-<!--            {{item.sampleId}}{{item.name}}-->
-<!--            <el-checkbox :key="item.taskId" v-model="item.check" >{{item.sampleId}}{{item.name}}</el-checkbox>-->
+          <el-menu-item v-for="item in infoTable" :key="item.sampleId" :index="item.sampleId" @click="sampleSheet(item)" :style="colors[item.status]">
             <el-checkbox>{{item.sampleId}}{{item.name}}</el-checkbox>
           </el-menu-item>
         </el-menu>
@@ -27,22 +24,6 @@
     <el-container>
       <el-header style="text-align: right; font-size: 12px">
         <div class="toolbar">
-          <!-- <el-button @click="querylistBK">获取实验室</el-button> -->
-<!--          <el-dropdown trigger="click" @command="taskListBK">-->
-<!--            <span class="el-dropdown-link">-->
-<!--              选择实验室<el-icon class="el-icon&#45;&#45;right">-->
-<!--                <arrow-down />-->
-<!--              </el-icon>-->
-<!--            </span>-->
-<!--            <template #dropdown>-->
-<!--              <el-dropdown-menu>-->
-<!--                <el-dropdown-item @command="taskListBK" v-for="item in lab" :key="item.id" :command="item.id">-->
-<!--                  {{item.name}}-->
-<!--                  &lt;!&ndash;                实验室列表获取  &ndash;&gt;-->
-<!--                </el-dropdown-item>-->
-<!--              </el-dropdown-menu>-->
-<!--            </template>-->
-<!--          </el-dropdown>-->
           <el-select v-model="value" clearable placeholder="选择实验室">
             <el-option v-for="item in lab" :key="item.id" :label="item.name" :id="item.id"
               @click="taskListBK(item.id)" />
@@ -66,7 +47,6 @@
           </el-table><br />
 
           <el-button :disabled="disabledButton" @click="missionStart">启动任务</el-button>
-          <!--          <el-button  @click="startTask">启动任务</el-button>-->
           <el-dialog v-model="dialogStart" title="开始分析" width="20%"  >
             <span>输入项目id</span>
             <el-input v-model="proId" />
@@ -76,17 +56,13 @@
           </el-dialog>
 
           <el-button :disabled="disabledButton" @click="dialogStop = true">中止任务</el-button>
-<!--          <el-button @click="sampleResult">展示样本</el-button>-->
           <el-button @click="sampleInfo">展示样本</el-button>
-<!--          <el-button @click="sampleResult">获取结果</el-button>-->
           <!-- 你刚刚这么写，不对，这个item什么都不是，你并没有传东西进去 -->
           <!-- 你现在要做的就是获取你要对比的那条数据
                怎么获取呢，去找到你点击左侧第一列的那个事件，点一下，就能获取到了
                现在跟莫老师一起去看看
                周围都没有v-for出来的item，所以这是一个不存在的东西
           -->
-<!--          <el-button @click="selectSample">展开结果</el-button><br /><br />-->
-          <!--          <el-button v-if="result.id===run.id" @click="sampleResult" @click="dialogStart = true">展示样本</el-button>-->
           <el-dialog v-model="dialogStop" title="中止任务" width="20%" >
             <span>输入项目id</span>
             <el-input v-model="proId" />
@@ -95,9 +71,6 @@
             </span>
           </el-dialog>
 
-          <!--          <el-button  @click="startTask">开始分析</el-button>-->
-          <!--          <el-button  @click="startTask">中止分析9</el-button>-->
-          <!--          <el-table v-show="secTable.length" :data="secTable" height="100" @selection-change="handleSelectionChange">-->
           <el-table v-show="midTable.length" :data="midTable" border style="width: 90%">
             <el-table-column prop="name" label="患者姓名" width="100" />
             <el-table-column prop="sex" label="性别" width="60" />
@@ -113,7 +86,7 @@
             <!--            <el-table-column prop="status" label="审核状态" width="220" />-->
             <el-table-column prop="status" label="审核状态" width="220">
               <template #default="scope">
-                <el-select v-model="scope.row.status" @change="sampleVerify" class="m-2" placeholder="Select"
+                <el-select v-model="scope.row.status" @change="sampleVerify(scope.row)" class="m-2" placeholder="Select"
                   size="large">
                   <el-option label="未审核" value="未审核" />
                   <el-option label="待讨论" value="待讨论" />
@@ -136,7 +109,7 @@
             <el-table-column prop="readsNums" label="reads数" width="120" />
             <el-table-column prop="sign" label="信号强度" width="120" />
             <el-table-column prop="copyMums" label="病原体浓度" width="120" />
-            <el-table-column prop="status" label="初始状态" width="120" />
+            <el-table-column prop="initStatus" label="初始状态" width="120" />
             <el-table-column prop="status" label="审核状态" width="120" />
             <el-table-column prop="status" label="病原结果归属">
               <template #default="scope">
@@ -150,7 +123,7 @@
               </template>
             </el-table-column>
           </el-table>
-          <el-button v-show="secTable.length" @click="generateRepo">生成报告</el-button>
+          <el-button v-if="auditBtnShow" @click="generateRepo">生成报告</el-button>
         </el-scrollbar>
       </el-main>
     </el-container>
@@ -180,17 +153,6 @@
     <el-input v-model="dataAddress" />
     <el-upload ref="upload1" class="upload-demo" action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15"
       :limit="1" :on-exceed="handleExceed" :auto-upload="false">
-<!--      <template #trigger>-->
-<!--        <el-button text>添加</el-button>-->
-<!--      </template>-->
-<!--      <el-button class="ml-3" type="success">-->
-<!--        上传-->
-<!--      </el-button>-->
-<!--      <template #tip>-->
-<!--        <div class="el-upload__tip text-red">-->
-<!--          limit 1 file, new file will cover the old file-->
-<!--        </div>-->
-<!--      </template>-->
     </el-upload>
     <template #footer>
       <span class="dialog-footer">
@@ -204,10 +166,7 @@
 import { ref, onMounted } from 'vue';
 import axios from '../plugin/axios/interface';
 import axurl from '../plugin/axios';
-// import { Menu as IconMenu, Message, MessageBox, Setting } from '@element-plus/icons-vue';
 import { ElMessage, genFileId, UploadInstance, UploadProps, UploadRawFile } from 'element-plus';
-// import { ArrowDown } from '@element-plus/icons-vue';
-// import { clippingParents } from '@popperjs/core';
 
 
 
@@ -217,9 +176,6 @@ const dialogStart = ref(false)
 const dialogStop = ref(false)
 const baseUrl = ref(`${axurl.defaults.baseURL}/upload/`)
 
-// const handleSelectionChange = (val: Result[]) => {
-//   multipleSelection.value = val
-// }
 
 
 interface Lab {
@@ -230,37 +186,33 @@ interface Run {
   id: number, createdBy: string, name: string, workDir: string,
   sampleInfoFile: string, sequenceId: string, lab: number, status: string, step: string, createdAt: string,
 }
-// interface Samp {
-//   taskId: number, remotePath: string, sid: string
-// }
 interface Result {
-  id: number, taskId: number,copyMums:string, sid: string, pathogensClassify: string, pathogensChsName: string, pathogensEngName: string, sampleType: string, pathogensNote: string, agent: string, hospital: string, office: string, name: string, sex: string, age: string, sign: string, readsNums: string, status: string
+  id: number, taskId: number,copyMums:string, sid: string, pathogensClassify: string, pathogensChsName: string, pathogensEngName: string, sampleType: string, pathogensNote: string, agent: string, hospital: string, office: string, name: string, sex: string, age: string, sign: string, readsNums: string, status: string, initStatus: string
 }
 interface Samplesheet {
   id: number; lab: string; name: string; status: string; agent: string; hospital: string; office: string; doctor: string; sampleId: string; sex: string; analysisItem: string; sampleType: string; nucleicAcidConcentration: string; libraryConcentration: string; receiveSampleDate: string; paymentStatus: string; sickbedNum: string; medicalRecordNum: string; age: string; phoneNum: string; identityCardNum: string;
 }
-
+interface Search{
+  id:string, reportFile:string, lab:string, name:string, agent:string, hospital:string, office:string, doctor:string, sampleId:string, sex:string, analysisItem:string, sampleType:string, nucleicAcidConcentration:string, libraryConcentration:string, sickbedNum:string, medicalRecordNum:string, age:string, phoneNum:string, identityCardNum:string, barcodeNum:string, resultFromHospital:string, majorPathogen:string, otherPathogen:string, wbc:string, lymphocyte:string, neutrophil:string, crp:string, pct:string, analysisContent:string, experimentNum:string, sampleCapacity:string, dnaVolume:string, panelName:string, internalReferenceNum:string, stdSampleNum:string, i7BarcodeNum:string, i5BarcodeNum:string, collectBy:string, labBy:string, samplingAt:string, status:string, task:string,
+}
+const search = ref('')
 const currentPage = ref(1);
 const pageSize = ref(100);
 const labId = ref(1);
 const taskId = ref('');
 const task = ref('');
-// const sampleId = ref('');
 const sid = ref('');
 const id = ref('');
-// const sampleInfoFile = ref('');
-// const name = ref('');
 const proName = ref('20221007');
 const proId = ref('');
+const keyWord = ref('');
 // const status = ref('');
 
 const sampleXlsx = ref('');
 const dataAddress = ref('file://')
-// const checkSample = ref('');
 // 定义lab类型的数组
 let lab = ref([] as Lab[]);
 let run = ref([] as Run[]);
-// let samplepsheet = ref([] as Samplesheet[]);
 
 // let samp = ref([] as Samp[]);
 // 第二列菜单的数据
@@ -270,6 +222,7 @@ let secClickMenu: any = ref([]);
 // let xlsxPath: any = ref([]);
 let secMenuClick = ref([] as Result[]);
 let resultTable: any = ref([]);
+let sampleVerifytalbe : any = ref([]);
 const disabledButton = ref(true)
 
 // 右边第一个列表的数据
@@ -278,9 +231,19 @@ let firTableData = ref([] as Run[]);
 let secTable = ref([] as Result[]);
 let midTable = ref([] as Samplesheet[]);
 let infoTable = ref([] as Samplesheet[]);
-// let midTable = infoTable.filter((item) => {
-//   return item.name == midTable.name
-// });
+let searchTable = ref([] as Search[]);
+
+// 控制生成报告按钮显示与隐藏
+let auditBtnShow = ref(false)
+
+// 第二列的颜色
+const colors = ref({
+  '未审核': 'background: #E8D2D6; color: #fff',
+  '待讨论': 'background: #C6D0F4; color: #fff',
+  '复测': 'background: #EDEDCD; color: #fff',
+  '已发送': 'background: #D0F4C6; color: #fff',
+  '审核通过': 'background: #DDDDDD; color: #fff',
+})
 
 onMounted(() => {
   querylistBK()
@@ -317,57 +280,32 @@ async function sampleResult() {
   secMenuClick.value = res[0].result.sort((a: any, b: any) => {
     return a.agent.localeCompare(b.agent)
   });
-  taskId.value = String(firTableData.value[0].id); //先把各种值print出来 看看哪个是我要的 然后赋值给那个不听话的变量TnT
-  if (res[0].code === 2001) {
-    ElMessage({ message: '创建成功', type: 'success' })
-
-  }
+  taskId.value = String(firTableData.value[0].id);
 }// 这个位置少了括号，删代码的时候多注意，不要删多了
+// 病原菌详情
+async function pathogenQuery() {
+  const params = {
+    id: secTable.value[0].id,
+  }
+  const res = (await axios.pathogenQuery(params))?.data || []
+}
 
-//样本信息
-// async function sampleInfo(item: any) {
-//   const params = {
-//     info: {
-//       // task: firTableData.value[0].id,
-//       task: secTable.value[0].taskId,
-//       sampleId: secTable.value[0].sid,
-//       // task :task.value,
-//     },
-//     "pageSize": 100,
-//     "currentPage": 1
-//   }
-//   const res = (await axios.sampleInfo(params))?.data || []
-//   // secTable.value = secMenu.value.filter((item) => item.id == obj.id)
-//   infoTable.value = res[0].result // 钱都没放到你自己的钱包里，怎么拿出去花
-//   task.value = String(secTable.value[0].taskId);
-//   name.value = String(secTable.value[0].name);
-//   sampleId.value = String(secTable.value[0].sid);
-//   console.log(444);
-//   console.log(infoTable.value);
-//   console.log(secTable.value[0].name)
-//   console.log(secTable.value)
-// }
-// async function sampleInfo(item: any) {
+// 展示样本-按钮事件
 async function sampleInfo() {
   const params = {
     info: {
       task: firTableData.value[0].id,
-      // task: secTable.value[0].taskId,
-      // sampleId: secTable.value[0].sid,
-      // task :task.value,
     },
     "pageSize": 100,
     "currentPage": 1
   }
   const res = (await axios.sampleInfo(params))?.data || []
-  // secTable.value = secMenu.value.filter((item) => item.id == obj.id)
   infoTable.value = res[0].result // 钱都没放到你自己的钱包里，怎么拿出去花
   secMenuClick.value = res[0].result.sort((a: any, b: any) => {
     return a.agent.localeCompare(b.agent)
   });
   task.value = String(firTableData.value[0].id);
-  // console.log(secTable.value[0].name)
-  // console.log(secTable.value)
+  console.log(infoTable)
 }
 async function createTask() {
   const params = {
@@ -389,13 +327,20 @@ async function createTask() {
 
   }
 }
-async function sampleVerify() {
+async function sampleVerify(row: any) {
+  console.log(row)
   const params = {
     id: midTable.value[0].id,
     status: midTable.value[0].status
   }
-  // id.value = String(midTable.value[0].id)
   const res = (await axios.sampleVerify(params))?.data || []
+  sampleVerifytalbe.value=res[0].result
+  auditBtnShow.value = row.status === '审核通过' ? true : false
+  infoTable.value.forEach(item => {
+    if (row.id === item.id) {
+      item.status = row.status
+    }
+  })
 }
 
 async function resultVerify() {
@@ -403,18 +348,14 @@ async function resultVerify() {
     id: secTable.value[0].id,
     status: secTable.value[0].status
   }
-  // id.value = String(midTable.value[0].id)
   const res = (await axios.resultVerify(params))?.data || []
+
 }
 
 async function generateRepo() {
   const params: number[] = [];
   id.value = String(midTable.value[0].id);
   params.push(midTable.value[0].id);
-  // secTable.value.forEach(item=>{
-  //   params.push(item.id);
-  // })
-  console.log(midTable.value[0].id)
   const res = (await axios.generateRepo(params))?.data || []
 }
 
@@ -446,7 +387,7 @@ async function stopTask() {
 // 第一列菜单点击事件
 function menuClick(obj: Run) {
   firTableData.value = run.value.filter((item) => item.id == obj.id)
-  // secTable.value = []
+  sampleInfo()
   secMenu.value = []
   infoTable.value = []
   midTable.value = []
@@ -462,51 +403,60 @@ function selectSample() {
   secTable.value = secMenu.value.filter((item) => {
     return item.sid == secClickMenu.value.sampleId
   })
+  secTable.value.forEach(item => {
+    item.initStatus = item.status
+  })
   secMenu.value = []
-  // secTable.value =[]
 }
-// function sampleSheet() {
-//   midTable.value = infoTable.value.filter((item) => {
-//     return item.name == secClickMenu.value.name
-//   })
-// }
 async function sampleSheet(obj:Samplesheet) {
   secClickMenu.value = obj
   midTable.value = infoTable.value.filter((item) => {
-    return item.name == secClickMenu.value.name
+    // return item.name == secClickMenu.value.name
+    return item.sampleId == secClickMenu.value.sampleId
   })
-
-  console.log(555);
-  console.log(infoTable.value);
-  console.log(midTable.value);
-  console.log(secClickMenu.value);
-  console.log(secMenuClick.value)
-  // console.log(midTable.value);
   secTable.value =[]
   await  sampleResult()
   selectSample()
 }
+// 搜索
+async function resultSearch() {
+  const params = {
+    "keyWord":keyWord.value,
+    "pageSize": 100,
+    "currentPage": 1
+  }
+  const res = (await axios.resultSearch(params))?.data || []
+  searchTable.value = res[0].result // 钱都没放到你自己的钱包里，怎么拿出去花
+}
+// 搜索样本
+async function sampleSearch() {
+  const params = {
+    "keyWord":keyWord.value,
+    "pageSize": 100,
+    "currentPage": 1
+  }
+  const res = (await axios.sampleSearch(params))?.data || []
+  searchTable = res[0].result // 钱都没放到你自己的钱包里，怎么拿出去花
+}
+// 搜索任务
+async function taskSearch() {
+  const params = {
+    "keyWord":keyWord.value,
+    "pageSize": 100,
+    "currentPage": 1
+  }
+  const res = (await axios.taskSearch(params))?.data || []
+  searchTable = res[0].result // 钱都没放到你自己的钱包里，怎么拿出去花
+}
 
-//
-// const handleCommand = (command: string | number | object) => {
-//   ElMessage(`click on item ${command}`)
-// }
 const value = ref('')
-
-
 const upload = ref<UploadInstance>()
-
 const handleExceed: UploadProps['onExceed'] = (files) => {
   upload.value!.clearFiles()
   const file = files[0] as UploadRawFile
   file.uid = genFileId()
   upload.value!.handleStart(file)
 }
-
-
-// const submitUpload = () => {
-//   upload.value!.submit()
-// }
 
 async function submitUpload(){
   upload.value!.submit()
@@ -516,8 +466,6 @@ async function submitUpload(){
   if (res[0].code === 2001) {
     ElMessage({ message: '创建成功', type: 'success' })
   }
-  console.log(999)
-  console.log(res[0].result)
 
 }
 
